@@ -19,6 +19,11 @@ $ make
 $ sudo insmod hello.ko
 ```
 
+### unload module
+```
+$ sudo rmmod hello
+```
+
 ### see messages from kernel module
 ```
 $ dmesg | tail
