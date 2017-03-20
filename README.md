@@ -1,6 +1,4 @@
 # netfilter
-netfilter
-
 Based on: https://kel.bz/post/netfilter/
 
 ### setup ubuntu
@@ -34,11 +32,11 @@ $ watch 'sudo dmesg -c >> /tmp/dmesg.log; tail -n 20 /tmp/dmesg.log'
 $ sudo wireshark
 ```
 
-### use nmap to generate packets with ip header options
+### use nmap to generate packets with IP header options
 ```
 $ nmap --ip-options "R" localhost
 ```
 
 ### possibly useful links
-http://lxr.free-electrons.com/source/net/netfilter/xt_LOG.c?v=3.10
-http://seclists.org/nmap-dev/2006/q3/52
+- http://lxr.free-electrons.com/source/net/netfilter/xt_LOG.c?v=3.10
+- http://seclists.org/nmap-dev/2006/q3/52
