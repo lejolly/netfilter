@@ -4,7 +4,12 @@ Based on: https://kel.bz/post/netfilter/
 ### setup ubuntu
 ```
 $ sudo apt-get update
-$ sudo apt-get install build-essential linux-headers-$(uname -r) make wireshark nmap
+$ sudo apt-get install build-essential linux-headers-$(uname -r) make wireshark nmap git
+```
+
+### clone repo
+```
+$ git clone https://github.com/lejolly/netfilter.git
 ```
 
 ### run make
