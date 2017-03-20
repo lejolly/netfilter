@@ -26,5 +26,5 @@ $ sudo rmmod hello
 
 ### see messages from kernel module
 ```
-$ dmesg | tail
+$ watch 'dmesg | tail -50'
 ```
