@@ -56,3 +56,4 @@ $ nmap --ip-options "R" localhost
 ### possibly useful links
 - http://lxr.free-electrons.com/source/net/netfilter/xt_LOG.c?v=3.10
 - http://seclists.org/nmap-dev/2006/q3/52
+- https://www.digitalocean.com/community/tutorials/a-deep-dive-into-iptables-and-netfilter-architecture
