@@ -1,0 +1,10 @@
+/modules.order
+/Module.symvers
+/hello.o
+/hello.ko
+/hello.mod.c
+/hello.mod.o
+/.hello.ko.cmd
+/.hello.mod.o.cmd
+/.hello.o.cmd
+/.tmp_versions
