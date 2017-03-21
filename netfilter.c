@@ -78,7 +78,7 @@ unsigned int hook_func(unsigned int hooknum,
 
                 // copy stuff to new IP header
                 char *temp;
-                temp = kmalloc(sizeof(struct iphdr), GFP_ATOMIC);
+                temp = kzalloc(sizeof(struct iphdr) + IP_HDR_OPT_LEN, GFP_ATOMIC);
                 struct iphdr *new_iphdr;
                 new_iphdr = (struct iphdr*)temp;
                 memcpy(new_iphdr, iph, sizeof(struct iphdr));
@@ -96,7 +96,7 @@ unsigned int hook_func(unsigned int hooknum,
                 struct iphdr *new_iph;
                 new_iph = skb_push(sock_buff, sizeof(struct iphdr) + IP_HDR_OPT_LEN);
                 skb_reset_network_header(sock_buff);
-                memcpy(new_iph, new_iphdr, sizeof(struct iphdr));
+                memcpy(new_iph, new_iphdr, sizeof(struct iphdr) + IP_HDR_OPT_LEN);
 
                 struct iphdr *iph2;
                 iph2 = (struct iphdr *)skb_network_header(sock_buff);
