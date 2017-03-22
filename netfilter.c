@@ -59,13 +59,13 @@ unsigned int hook_func(unsigned int hooknum,
             if(iph->ihl * 4 == sizeof(struct iphdr) && iph->protocol==IPPROTO_ICMP) {
                 printk(KERN_INFO "=== BEGIN PACKET ===\n");
                 printk(KERN_INFO "ICMP packet with no IP header options detected\n");
-                printk(KERN_INFO "Packet size: %d\n", iph->tot_len);
+                printk(KERN_INFO "Packet size: %d\n", ntohs(iph->tot_len));
                 printk(KERN_INFO "IP header size: %d\n", iph->ihl * 4);
-                printk(KERN_INFO "IP header source: %d.%d.%d.%d\n", NIPQUAD(iph->saddr));
-                printk(KERN_INFO "IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph->daddr));
+                // printk(KERN_INFO "IP header source: %d.%d.%d.%d\n", NIPQUAD(iph->saddr));
+                // printk(KERN_INFO "IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph->daddr));
 
                 // expand skb headroom (from http://stackoverflow.com/a/6417918)
-                printk(KERN_INFO "skb headroom: %d\n", skb_headroom(sock_buff));                
+                printk(KERN_INFO "Current skb headroom: %d\n", skb_headroom(sock_buff));                
                 if (skb_headroom(sock_buff) < IP_HDR_OPT_LEN) {
                     if (0 != pskb_expand_head(sock_buff, IP_HDR_OPT_LEN - skb_headroom(sock_buff), 0, GFP_ATOMIC)) {
                         printk(KERN_ERR "Error: Unable to expand skb headroom\n");
@@ -84,7 +84,7 @@ unsigned int hook_func(unsigned int hooknum,
                 memcpy(new_iphdr, iph, sizeof(struct iphdr));
 
                 // edit length values
-                new_iphdr->tot_len  = new_iphdr->tot_len + IP_HDR_OPT_LEN;
+                new_iphdr->tot_len  = htons(ntohs(new_iphdr->tot_len) + IP_HDR_OPT_LEN);
                 new_iphdr->ihl      = new_iphdr->ihl + (IP_HDR_OPT_LEN / 4);
 
                 // Calculation of IP header checksum
@@ -100,10 +100,10 @@ unsigned int hook_func(unsigned int hooknum,
 
                 struct iphdr *iph2;
                 iph2 = (struct iphdr *)skb_network_header(sock_buff);
-                printk(KERN_INFO "New Packet size: %d\n", iph2->tot_len);
+                printk(KERN_INFO "New Packet size: %d\n", ntohs(iph2->tot_len));
                 printk(KERN_INFO "New IP header size: %d\n", iph2->ihl * 4);
-                printk(KERN_INFO "New IP header source: %d.%d.%d.%d\n", NIPQUAD(iph2->saddr));
-                printk(KERN_INFO "New IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph2->daddr));
+                // printk(KERN_INFO "New IP header source: %d.%d.%d.%d\n", NIPQUAD(iph2->saddr));
+                // printk(KERN_INFO "New IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph2->daddr));
                 print_ip_header_options(sock_buff);
                 printk(KERN_INFO "=== END PACKET ===\n");
             }
