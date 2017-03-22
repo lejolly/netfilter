@@ -8,6 +8,7 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 #include <linux/skbuff.h>
+#include <linux/string.h>
 #include <net/ip.h>
 
 #define NIPQUAD(addr) \
@@ -17,6 +18,7 @@
     ((unsigned char *)&addr)[3]
 
 #define IP_HDR_OPT_LEN 40
+static char *magicstring = "default magic string";
 
 static struct nf_hook_ops nfho;
 struct tcphdr *tcp_header;
@@ -58,30 +60,47 @@ unsigned int hook_func(unsigned int hooknum,
             // printk(KERN_INFO "Packet has no IP header options\n");
             if(iph->ihl * 4 == sizeof(struct iphdr) && iph->protocol==IPPROTO_ICMP) {
                 printk(KERN_INFO "=== BEGIN PACKET ===\n");
-                printk(KERN_INFO "ICMP packet with no IP header options detected\n");
-                printk(KERN_INFO "Packet size: %d\n", ntohs(iph->tot_len));
-                printk(KERN_INFO "IP header size: %d\n", iph->ihl * 4);
+                // printk(KERN_INFO "ICMP packet with no IP header options detected\n");
+                // printk(KERN_INFO "Packet size: %d\n", ntohs(iph->tot_len));
+                // printk(KERN_INFO "IP header size: %d\n", iph->ihl * 4);
                 // printk(KERN_INFO "IP header source: %d.%d.%d.%d\n", NIPQUAD(iph->saddr));
                 // printk(KERN_INFO "IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph->daddr));
 
                 // expand skb headroom (from http://stackoverflow.com/a/6417918)
-                printk(KERN_INFO "Current skb headroom: %d\n", skb_headroom(sock_buff));                
+                // printk(KERN_INFO "Current skb headroom: %d\n", skb_headroom(sock_buff));
                 if (skb_headroom(sock_buff) < IP_HDR_OPT_LEN) {
                     if (0 != pskb_expand_head(sock_buff, IP_HDR_OPT_LEN - skb_headroom(sock_buff), 0, GFP_ATOMIC)) {
                         printk(KERN_ERR "Error: Unable to expand skb headroom\n");
                         kfree_skb(sock_buff);
                         return NF_STOLEN;
                     } else {
-                        printk(KERN_INFO "Expanded skb headroom to: %d\n", skb_headroom(sock_buff));
+                        // printk(KERN_INFO "Expanded skb headroom to: %d\n", skb_headroom(sock_buff));
                     }
                 }
 
+                unsigned int new_hdr_len = sizeof(struct iphdr) + IP_HDR_OPT_LEN;
+
                 // copy stuff to new IP header
                 char *temp;
-                temp = kzalloc(sizeof(struct iphdr) + IP_HDR_OPT_LEN, GFP_ATOMIC);
+                temp = kzalloc(new_hdr_len, GFP_ATOMIC);
                 struct iphdr *new_iphdr;
                 new_iphdr = (struct iphdr*)temp;
                 memcpy(new_iphdr, iph, sizeof(struct iphdr));
+
+                // copy magic string to packet
+                printk(KERN_INFO "magicstring: %s\n", magicstring);
+                unsigned int str_len = (strlen(magicstring) + 1) * sizeof(char);
+                printk(KERN_INFO "Input magic string length in bytes: %d\n", str_len);
+                if (str_len > 40) {
+                    str_len = 40;
+                    printk(KERN_INFO "String length too large, reducing to 40 bytes\n");
+                }
+                unsigned int magicstring_ptr = new_iphdr + sizeof(struct iphdr);
+                // memset(magicstring_ptr, 0, IP_HDR_OPT_LEN);
+                // printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
+                // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);
+                // memcpy(magicstring_ptr, magicstring, str_len);
+                // printk(KERN_INFO "trying to read magicstring in new_iphdr: %s\n", magicstring_ptr);
 
                 // edit length values
                 new_iphdr->tot_len  = htons(ntohs(new_iphdr->tot_len) + IP_HDR_OPT_LEN);
@@ -94,16 +113,22 @@ unsigned int hook_func(unsigned int hooknum,
                 // remove old IP header then put the new one in
                 skb_pull(sock_buff, sizeof(struct iphdr));
                 struct iphdr *new_iph;
-                new_iph = skb_push(sock_buff, sizeof(struct iphdr) + IP_HDR_OPT_LEN);
+                new_iph = skb_push(sock_buff, new_hdr_len);
                 skb_reset_network_header(sock_buff);
-                memcpy(new_iph, new_iphdr, sizeof(struct iphdr) + IP_HDR_OPT_LEN);
+                // memset(new_iph, 0, new_hdr_len);
+                // printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
+                // printk(KERN_INFO "new_iph:         0x%p\n", new_iph);
+                memcpy(new_iph, new_iphdr, new_hdr_len);
+                // magicstring_ptr = new_iph + sizeof(struct iphdr);
+                // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);
+                // printk(KERN_INFO "trying to read magicstring in new_iph: %s\n", magicstring_ptr);
 
                 struct iphdr *iph2;
                 iph2 = (struct iphdr *)skb_network_header(sock_buff);
                 printk(KERN_INFO "New Packet size: %d\n", ntohs(iph2->tot_len));
                 printk(KERN_INFO "New IP header size: %d\n", iph2->ihl * 4);
-                // printk(KERN_INFO "New IP header source: %d.%d.%d.%d\n", NIPQUAD(iph2->saddr));
-                // printk(KERN_INFO "New IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph2->daddr));
+                printk(KERN_INFO "New IP header source: %d.%d.%d.%d\n", NIPQUAD(iph2->saddr));
+                printk(KERN_INFO "New IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph2->daddr));
                 print_ip_header_options(sock_buff);
                 printk(KERN_INFO "=== END PACKET ===\n");
             }
@@ -165,6 +190,7 @@ void print_ip_header_options(struct sk_buff *sock_buff) {
 
 static int __init initialize(void) {
     printk(KERN_INFO "Initializing netfilter.\n");
+    // printk(KERN_INFO "magicstring: %s\n", magicstring);
     nfho.hook = hook_func;
     // nfho.hooknum = NF_INET_PRE_ROUTING;
     //Interesting note: A pre-routing hook may not work here if our Vagrant
@@ -188,3 +214,8 @@ static void __exit teardown(void) {
 
 module_init(initialize);
 module_exit(teardown);
+
+MODULE_LICENSE("GPL");
+
+module_param(magicstring, charp, 0000);
+MODULE_PARM_DESC(magicstring, "Magic string");
