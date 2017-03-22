@@ -61,8 +61,8 @@ unsigned int hook_func(unsigned int hooknum,
             if(iph->ihl * 4 == sizeof(struct iphdr) && iph->protocol==IPPROTO_ICMP) {
                 printk(KERN_INFO "=== BEGIN PACKET ===\n");
                 // printk(KERN_INFO "ICMP packet with no IP header options detected\n");
-                // printk(KERN_INFO "Packet size: %d\n", ntohs(iph->tot_len));
-                // printk(KERN_INFO "IP header size: %d\n", iph->ihl * 4);
+                printk(KERN_INFO "Packet size: %d\n", ntohs(iph->tot_len));
+                printk(KERN_INFO "IP header size: %d\n", iph->ihl * 4);
                 // printk(KERN_INFO "IP header source: %d.%d.%d.%d\n", NIPQUAD(iph->saddr));
                 // printk(KERN_INFO "IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph->daddr));
 
@@ -91,15 +91,14 @@ unsigned int hook_func(unsigned int hooknum,
                 printk(KERN_INFO "magicstring: %s\n", magicstring);
                 unsigned int str_len = (strlen(magicstring) + 1) * sizeof(char);
                 printk(KERN_INFO "Input magic string length in bytes: %d\n", str_len);
-                if (str_len > 40) {
-                    str_len = 40;
-                    printk(KERN_INFO "String length too large, reducing to 40 bytes\n");
+                if (str_len > 39) {
+                    str_len = 39;
+                    printk(KERN_INFO "String length too large, reducing to 39 bytes\n");
                 }
-                unsigned int magicstring_ptr = new_iphdr + sizeof(struct iphdr);
-                // memset(magicstring_ptr, 0, IP_HDR_OPT_LEN);
+                char *magicstring_ptr = (char *)new_iphdr + sizeof(struct iphdr) + 1;
                 // printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
                 // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);
-                // memcpy(magicstring_ptr, magicstring, str_len);
+                memcpy(magicstring_ptr, magicstring, str_len);
                 // printk(KERN_INFO "trying to read magicstring in new_iphdr: %s\n", magicstring_ptr);
 
                 // edit length values
@@ -115,13 +114,7 @@ unsigned int hook_func(unsigned int hooknum,
                 struct iphdr *new_iph;
                 new_iph = skb_push(sock_buff, new_hdr_len);
                 skb_reset_network_header(sock_buff);
-                // memset(new_iph, 0, new_hdr_len);
-                // printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
-                // printk(KERN_INFO "new_iph:         0x%p\n", new_iph);
                 memcpy(new_iph, new_iphdr, new_hdr_len);
-                // magicstring_ptr = new_iph + sizeof(struct iphdr);
-                // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);
-                // printk(KERN_INFO "trying to read magicstring in new_iph: %s\n", magicstring_ptr);
 
                 struct iphdr *iph2;
                 iph2 = (struct iphdr *)skb_network_header(sock_buff);

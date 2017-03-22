@@ -19,7 +19,7 @@ $ make
 
 ### load module
 ```
-$ sudo insmod netfilter.ko
+$ sudo insmod netfilter.ko magicstring=whee
 ```
 
 ### unload module
@@ -29,7 +29,7 @@ $ sudo rmmod netfilter
 
 ### see messages from kernel module
 ```
-$ watch 'sudo dmesg -c >> /tmp/dmesg.log; tail -n 20 /tmp/dmesg.log'
+$ watch 'sudo dmesg -c >> /tmp/dmesg.log; tail -n 40 /tmp/dmesg.log'
 ```
 
 ### use wireshark to inspect packets
@@ -37,20 +37,60 @@ $ watch 'sudo dmesg -c >> /tmp/dmesg.log; tail -n 20 /tmp/dmesg.log'
 $ sudo wireshark
 ```
 
-### use nmap to generate packets with IP header options
+### use ping to generate packets
 ```
-$ nmap --ip-options "R" localhost
+$ ping -c 1 localhost
 ```
 
 ### you should see stuff like this from dmesg
 ```
-[17546.783268] Initializing netfilter.
-[17546.783277] Packet has IP header
-[17546.783277] Packet has IP header options
-[17546.783278] IP options: (0727107F0000017F0000017F00000100000000000000000000000000000000000000000000000000)
-[17547.989705] Packet has IP header
-[17547.989722] Packet has no IP header options
-[17551.934391] Tearing down netfilter.
+[ 1127.261028] Initializing netfilter.
+[ 1127.262982] === BEGIN PACKET ===
+[ 1127.262985] Packet size: 84
+[ 1127.262985] IP header size: 20
+[ 1127.262987] magicstring: wheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+[ 1127.262988] Input magic string length in bytes: 59
+[ 1127.262989] String length too large, reducing to 39 bytes
+[ 1127.262990] New Packet size: 124
+[ 1127.262990] New IP header size: 60
+[ 1127.262991] New IP header source: 127.0.0.1
+[ 1127.262992] New IP header dest: 127.0.0.1
+[ 1127.262993] IP header options size: 40
+[ 1127.262993] IP options: (0077686565656565656565656565656565656565656565656565656565656
+5656565656565656565)
+[ 1127.263001] === END PACKET ===
+[ 1127.263010] === BEGIN PACKET ===
+[ 1127.263011] Packet size: 84
+[ 1127.263011] IP header size: 20
+[ 1127.263012] magicstring: wheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+[ 1127.263013] Input magic string length in bytes: 59
+[ 1127.263016] String length too large, reducing to 39 bytes
+[ 1127.263017] New Packet size: 124
+[ 1127.263017] New IP header size: 60
+[ 1127.263018] New IP header source: 127.0.0.1
+[ 1127.263018] New IP header dest: 127.0.0.1
+[ 1127.263019] IP header options size: 40
+[ 1127.263020] IP options: (0077686565656565656565656565656565656565656565656565656565656
+5656565656565656565)
+[ 1127.263027] === END PACKET ===
+[ 1127.267873] Tearing down netfilter.
+```
+
+### sample script to help run through things faster
+```
+#/bin/bash
+
+rm -f ./netfilter.c
+cp /media/psf/netfilter/netfilter.c ./netfilter.c
+make
+sudo insmod ./netfilter.ko magicstring=wheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ping -c 1 localhost
+sudo rmmod netfilter
+```
+
+### use nmap to generate packets with IP header options (not used)
+```
+$ nmap --ip-options "R" localhost
 ```
 
 ### possibly useful links
