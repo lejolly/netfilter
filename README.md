@@ -26,6 +26,7 @@ $ watch 'sudo dmesg -c >> /tmp/dmesg.log; tail -n 40 /tmp/dmesg.log'
 ### load module
 ```
 $ sudo insmod netfilter.ko magicstring=whee
+(for multiple words use something like this: magicstring="\"hello world\"")
 ```
 
 ### use wireshark to inspect packets (optional, open in another window)
