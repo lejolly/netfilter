@@ -14,7 +14,13 @@ $ git clone https://github.com/lejolly/netfilter.git
 
 ### run make
 ```
+$ cd ./netfilter
 $ make
+```
+
+### see messages from kernel module (open in another window)
+```
+$ watch 'sudo dmesg -c >> /tmp/dmesg.log; tail -n 40 /tmp/dmesg.log'
 ```
 
 ### load module
@@ -22,19 +28,10 @@ $ make
 $ sudo insmod netfilter.ko magicstring=whee
 ```
 
-### unload module
-```
-$ sudo rmmod netfilter
-```
-
-### see messages from kernel module
-```
-$ watch 'sudo dmesg -c >> /tmp/dmesg.log; tail -n 40 /tmp/dmesg.log'
-```
-
-### use wireshark to inspect packets
+### use wireshark to inspect packets (optional, open in another window)
 ```
 $ sudo wireshark
+(listen on the loopback interface)
 ```
 
 ### use ping to generate packets
@@ -74,6 +71,11 @@ $ ping -c 1 localhost
 5656565656565656565)
 [ 1127.263027] === END PACKET ===
 [ 1127.267873] Tearing down netfilter.
+```
+
+### unload module
+```
+$ sudo rmmod netfilter
 ```
 
 ### sample script to help run through things faster
