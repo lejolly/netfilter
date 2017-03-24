@@ -42,36 +42,24 @@ $ ping -c 1 localhost
 
 ### you should see stuff like this from dmesg
 ```
-[ 1127.261028] Initializing netfilter.
-[ 1127.262982] === BEGIN PACKET ===
-[ 1127.262985] Packet size: 84
-[ 1127.262985] IP header size: 20
-[ 1127.262987] magicstring: wheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-[ 1127.262988] Input magic string length in bytes: 59
-[ 1127.262989] String length too large, reducing to 39 bytes
-[ 1127.262990] New Packet size: 124
-[ 1127.262990] New IP header size: 60
-[ 1127.262991] New IP header source: 127.0.0.1
-[ 1127.262992] New IP header dest: 127.0.0.1
-[ 1127.262993] IP header options size: 40
-[ 1127.262993] IP options: (0077686565656565656565656565656565656565656565656565656565656
-5656565656565656565)
-[ 1127.263001] === END PACKET ===
-[ 1127.263010] === BEGIN PACKET ===
-[ 1127.263011] Packet size: 84
-[ 1127.263011] IP header size: 20
-[ 1127.263012] magicstring: wheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-[ 1127.263013] Input magic string length in bytes: 59
-[ 1127.263016] String length too large, reducing to 39 bytes
-[ 1127.263017] New Packet size: 124
-[ 1127.263017] New IP header size: 60
-[ 1127.263018] New IP header source: 127.0.0.1
-[ 1127.263018] New IP header dest: 127.0.0.1
-[ 1127.263019] IP header options size: 40
-[ 1127.263020] IP options: (0077686565656565656565656565656565656565656565656565656565656
-5656565656565656565)
-[ 1127.263027] === END PACKET ===
-[ 1127.267873] Tearing down netfilter.
+[ 1128.134822] Initializing netfilter.
+[ 1128.138234] === BEGIN OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
+[ 1128.138237] magicstring: hello world
+[ 1128.138238] input magicstring length in bytes: 12
+[ 1128.138239] resulting magicstring: hello world
+[ 1128.138240] === END OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
+[ 1128.138246] === BEGIN INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
+[ 1128.138247] magicstring: hello world
+[ 1128.138248] === END INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
+[ 1128.138251] === BEGIN OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
+[ 1128.138252] magicstring: hello world
+[ 1128.138253] input magicstring length in bytes: 12
+[ 1128.138253] resulting magicstring: hello world
+[ 1128.138254] === END OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
+[ 1128.138258] === BEGIN INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
+[ 1128.138258] magicstring: hello world
+[ 1128.138259] === END INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
+[ 1128.146348] Tearing down netfilter.
 ```
 
 ### unload module
