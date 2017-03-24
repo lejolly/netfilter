@@ -42,6 +42,12 @@ $ ping -c 1 localhost
 
 ### there is a random chance that your packet won't make it through
 the kernel module randomly decides whether to put the magicstring into the packet. if the incoming hook does not detect the same magicstring, then it drops the packet. 
+```
+[ 2782.393038] === BEGIN INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
+[ 2782.393039] magicstring:
+[ 2782.393040] error: strings do not match, dropping packet.
+[ 2782.393040] ===  END  INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
+```
 
 ### you should see stuff like this from dmesg
 ```
