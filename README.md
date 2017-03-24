@@ -40,26 +40,39 @@ $ sudo wireshark
 $ ping -c 1 localhost
 ```
 
+### there is a random chance that your packet won't make it through
+the kernel module randomly decides whether to put the magicstring into the packet. if the incoming hook does not detect the same magicstring, then it drops the packet. 
+
 ### you should see stuff like this from dmesg
 ```
-[ 1128.134822] Initializing netfilter.
-[ 1128.138234] === BEGIN OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
-[ 1128.138237] magicstring: hello world
-[ 1128.138238] input magicstring length in bytes: 12
-[ 1128.138239] resulting magicstring: hello world
-[ 1128.138240] === END OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
-[ 1128.138246] === BEGIN INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
-[ 1128.138247] magicstring: hello world
-[ 1128.138248] === END INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
-[ 1128.138251] === BEGIN OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
-[ 1128.138252] magicstring: hello world
-[ 1128.138253] input magicstring length in bytes: 12
-[ 1128.138253] resulting magicstring: hello world
-[ 1128.138254] === END OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
-[ 1128.138258] === BEGIN INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
-[ 1128.138258] magicstring: hello world
-[ 1128.138259] === END INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
-[ 1128.146348] Tearing down netfilter.
+[ 2789.829817] Initializing netfilter.
+[ 2789.829922]
+[ 2789.832270] === BEGIN OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
+[ 2789.832274] magicstring: hello world
+[ 2789.832275] input magicstring length in bytes: 12
+[ 2789.832277] putting magicstring into packet.
+[ 2789.832278] resulting magicstring: hello world
+[ 2789.832279] ===  END  OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
+[ 2789.832279]
+[ 2789.832286] === BEGIN INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
+[ 2789.832287] magicstring: hello world
+[ 2789.832288] strings match, sending packet through.
+[ 2789.832288] ===  END  INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
+[ 2789.832289]
+[ 2789.832292] === BEGIN OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
+[ 2789.832293] magicstring: hello world
+[ 2789.832294] input magicstring length in bytes: 12
+[ 2789.832295] putting magicstring into packet.
+[ 2789.832298] resulting magicstring: hello world
+[ 2789.832298] ===  END  OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===
+[ 2789.832299]
+[ 2789.832301] === BEGIN INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
+[ 2789.832302] magicstring: hello world
+[ 2789.832302] strings match, sending packet through.
+[ 2789.832303] ===  END  INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===
+[ 2789.832304]
+[ 2789.838428] Tearing down netfilter.
+[ 2789.838729]
 ```
 
 ### unload module

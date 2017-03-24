@@ -82,9 +82,18 @@ unsigned int out_hook_func(unsigned int hooknum,
         }
         char *magicstring_ptr = (char *)new_iphdr + sizeof(struct iphdr) + 1;
         // printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
-        // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);
-        memcpy(magicstring_ptr, magicstring, str_len);
-        printk(KERN_INFO "resulting magicstring: %s\n", magicstring_ptr);
+        // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);        
+
+        // decide whether to put magicstring into packet
+        int rand;
+        get_random_bytes(&rand, sizeof(rand));
+        if (rand > 0) {
+            printk(KERN_INFO "putting magicstring into packet.\n");
+            memcpy(magicstring_ptr, magicstring, str_len);
+            printk(KERN_INFO "resulting magicstring: %s\n", magicstring_ptr);
+        } else {
+            printk(KERN_INFO "NOT putting magicstring into packet.\n");
+        }
 
         // edit length values
         new_iphdr->tot_len  = htons(ntohs(new_iphdr->tot_len) + IP_HDR_OPT_LEN);
@@ -110,7 +119,8 @@ unsigned int out_hook_func(unsigned int hooknum,
         // printk(KERN_INFO "New IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph2->daddr));
         // print_ip_header_options(sock_buff);
 
-        printk(KERN_INFO "=== END OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===\n");
+        printk(KERN_INFO "===  END  OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===\n");
+        printk(KERN_INFO "\n");
     }
 
     return NF_ACCEPT;
@@ -142,7 +152,19 @@ unsigned int in_hook_func(unsigned int hooknum,
         memcpy(temp, magicstring_ptr, IP_HDR_OPT_LEN - 1);
         printk(KERN_INFO "magicstring: %s\n", temp);
 
-        printk(KERN_INFO "=== END INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===\n");
+        // compare strings
+        if(strcmp(magicstring, temp) == 0) {
+            printk(KERN_INFO "strings match, sending packet through.\n");
+        } else {
+            printk(KERN_INFO "error: strings do not match, dropping packet.\n");
+            kfree_skb(sock_buff);
+            printk(KERN_INFO "===  END  INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===\n");
+            printk(KERN_INFO "\n");
+            return NF_STOLEN;
+        }
+
+        printk(KERN_INFO "===  END  INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===\n");
+        printk(KERN_INFO "\n");
     }
 
     return NF_ACCEPT;
@@ -197,13 +219,16 @@ static int __init initialize(void) {
     in_nfho.pf = PF_INET;
     in_nfho.priority = NF_IP_PRI_FIRST;
     nf_register_hook(&in_nfho);
-    return 0;    
+
+    printk(KERN_INFO "\n");
+    return 0;
 }
 
 static void __exit teardown(void) {
     printk(KERN_INFO "Tearing down netfilter.\n");
     nf_unregister_hook(&out_nfho);
     nf_unregister_hook(&in_nfho);
+    printk(KERN_INFO "\n");
 }
 
 module_init(initialize);
