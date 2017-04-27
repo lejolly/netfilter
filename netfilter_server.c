@@ -1,4 +1,4 @@
-//Filename: netfilter_client.c
+//Filename: netfilter_server.c
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
@@ -18,7 +18,8 @@
     ((unsigned char *)&addr)[3]
 
 #define IP_HDR_OPT_LEN 40
-static char *magicstring = "default magicstring";
+static char *magicstring = "";
+static bool has_magicstring = false;
 
 static struct nf_hook_ops out_nfho;
 static struct nf_hook_ops in_nfho;
@@ -72,27 +73,33 @@ unsigned int out_hook_func(unsigned int hooknum,
         new_iphdr = (struct iphdr*)temp;
         memcpy(new_iphdr, iph, sizeof(struct iphdr));
 
-        // copy magic string to packet
-        printk(KERN_INFO "magicstring: %s\n", magicstring);
-        unsigned int str_len = (strlen(magicstring) + 1) * sizeof(char);
-        printk(KERN_INFO "input magicstring length in bytes: %d\n", str_len);
-        if (str_len > 39) {
-            str_len = 39;
-            printk(KERN_INFO "string length too large, reducing to 39 bytes\n");
-        }
-        char *magicstring_ptr = (char *)new_iphdr + sizeof(struct iphdr) + 1;
-        // printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
-        // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);        
+        if (has_magicstring == true) {
+            // copy magic string to packet
+            printk(KERN_INFO "magicstring: %s\n", magicstring);
+            unsigned int str_len = (strlen(magicstring) + 1) * sizeof(char);
+            printk(KERN_INFO "input magicstring length in bytes: %d\n", str_len);
 
-        // decide whether to put magicstring into packet
-        int rand;
-        get_random_bytes(&rand, sizeof(rand));
-        if (rand > 0) {
+            if (str_len > 39) {
+                str_len = 39;
+                printk(KERN_INFO "string length too large, reducing to 39 bytes\n");
+            }
+            char *magicstring_ptr = (char *)new_iphdr + sizeof(struct iphdr) + 1;
+            // printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
+            // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);
+
             printk(KERN_INFO "putting magicstring into packet.\n");
             memcpy(magicstring_ptr, magicstring, str_len);
+            // changing first character of string
+            if (str_len > 0) {
+                printk(KERN_INFO "changing first character of magicstring.\n");
+                char temp_char[] = "a";
+                memcpy(temp_char, magicstring_ptr, sizeof(char));
+                temp_char[0] = temp_char[0] >> 1;
+                memcpy(magicstring_ptr, temp_char, sizeof(char));
+            }
             printk(KERN_INFO "resulting magicstring: %s\n", magicstring_ptr);
         } else {
-            printk(KERN_INFO "NOT putting magicstring into packet.\n");
+            printk(KERN_INFO "no magicstring to put into packet.\n");
         }
 
         // edit length values
@@ -150,17 +157,15 @@ unsigned int in_hook_func(unsigned int hooknum,
         char *temp;
         temp = kzalloc(IP_HDR_OPT_LEN, GFP_ATOMIC);
         memcpy(temp, magicstring_ptr, IP_HDR_OPT_LEN - 1);
-        printk(KERN_INFO "magicstring: %s\n", temp);
 
-        // compare strings
-        if(strcmp(magicstring, temp) == 0) {
-            printk(KERN_INFO "strings match, sending packet through.\n");
+        // check if empty
+        if (temp[0] != '\0') {
+            printk(KERN_INFO "magicstring: %s\n", temp);
+            // save new magicstring
+            has_magicstring = true;
+            magicstring = temp;
         } else {
-            printk(KERN_INFO "error: strings do not match, dropping packet.\n");
-            kfree_skb(sock_buff);
-            printk(KERN_INFO "===  END  INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===\n");
-            printk(KERN_INFO "\n");
-            return NF_STOLEN;
+            printk(KERN_INFO "empty magicstring.\n");
         }
 
         printk(KERN_INFO "===  END  INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===\n");
@@ -235,6 +240,3 @@ module_init(initialize);
 module_exit(teardown);
 
 MODULE_LICENSE("GPL");
-
-module_param(magicstring, charp, 0000);
-MODULE_PARM_DESC(magicstring, "Magic string");
