@@ -19,6 +19,8 @@
 
 #define IP_HDR_OPT_LEN 40
 static char *magicstring = "default magicstring";
+static char *request_string = "request";
+bool should_send_cap = false;
 
 static struct nf_hook_ops out_nfho;
 static struct nf_hook_ops in_nfho;
@@ -36,7 +38,8 @@ unsigned int out_hook_func(unsigned int hooknum,
     struct sk_buff *sock_buff;
     sock_buff = skb;
 
-    if (!sock_buff) {
+    if (!sock_buff || !should_send_cap) {
+        should_send_cap = false;
         return NF_ACCEPT;
     }
 
@@ -85,15 +88,15 @@ unsigned int out_hook_func(unsigned int hooknum,
         // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);        
 
         // decide whether to put magicstring into packet
-        int rand;
-        get_random_bytes(&rand, sizeof(rand));
-        if (rand > 0) {
-            printk(KERN_INFO "putting magicstring into packet.\n");
-            memcpy(magicstring_ptr, magicstring, str_len);
-            printk(KERN_INFO "resulting magicstring: %s\n", magicstring_ptr);
-        } else {
-            printk(KERN_INFO "NOT putting magicstring into packet.\n");
-        }
+        // int rand;
+        // get_random_bytes(&rand, sizeof(rand));
+        // if (rand > 0) {
+        //     printk(KERN_INFO "putting magicstring into packet.\n");
+        //     memcpy(magicstring_ptr, magicstring, str_len);
+        //     printk(KERN_INFO "resulting magicstring: %s\n", magicstring_ptr);
+        // } else {
+        //     printk(KERN_INFO "NOT putting magicstring into packet.\n");
+        // }
 
         // edit length values
         new_iphdr->tot_len  = htons(ntohs(new_iphdr->tot_len) + IP_HDR_OPT_LEN);
@@ -150,17 +153,21 @@ unsigned int in_hook_func(unsigned int hooknum,
         char *temp;
         temp = kzalloc(IP_HDR_OPT_LEN, GFP_ATOMIC);
         memcpy(temp, magicstring_ptr, IP_HDR_OPT_LEN - 1);
-        printk(KERN_INFO "magicstring: %s\n", temp);
+
+        // printk(KERN_INFO "magicstring: %s\n", temp);
 
         // compare strings
-        if(strcmp(magicstring, temp) == 0) {
-            printk(KERN_INFO "strings match, sending packet through.\n");
+        if(strcmp(temp, request_string) == 0) {
+            printk(KERN_INFO "SIFF handshaking request detected.\n");
+            should_send_cap = true;
         } else {
-            printk(KERN_INFO "error: strings do not match, dropping packet.\n");
-            kfree_skb(sock_buff);
-            printk(KERN_INFO "===  END  INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===\n");
-            printk(KERN_INFO "\n");
-            return NF_STOLEN;
+            if (strcmp(temp, magicstring) != 0) {
+                printk(KERN_INFO "error: strings do not match, dropping packet.\n");
+                kfree_skb(sock_buff);
+                printk(KERN_INFO "===  END  INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===\n");
+                printk(KERN_INFO "\n");
+                return NF_STOLEN;
+            }
         }
 
         printk(KERN_INFO "===  END  INCOMING ICMP PACKET WTIH IP HEADER OPTIONS ===\n");
