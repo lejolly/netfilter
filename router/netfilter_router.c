@@ -38,8 +38,7 @@ unsigned int out_hook_func(unsigned int hooknum,
     struct sk_buff *sock_buff;
     sock_buff = skb;
 
-    if (!sock_buff || !should_send_cap) {
-        should_send_cap = false;
+    if (!sock_buff) {
         return NF_ACCEPT;
     }
 
@@ -91,9 +90,12 @@ unsigned int out_hook_func(unsigned int hooknum,
         // int rand;
         // get_random_bytes(&rand, sizeof(rand));
         // if (rand > 0) {
+        if (should_send_cap) {
             printk(KERN_INFO "putting magicstring into packet.\n");
             memcpy(magicstring_ptr, magicstring, str_len);
             printk(KERN_INFO "resulting magicstring: %s\n", magicstring_ptr);
+            should_send_cap = false;
+        }
         // } else {
         //     printk(KERN_INFO "NOT putting magicstring into packet.\n");
         // }
