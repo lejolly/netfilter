@@ -89,14 +89,6 @@ unsigned int out_hook_func(unsigned int hooknum,
 
             printk(KERN_INFO "putting magicstring into packet.\n");
             memcpy(magicstring_ptr, magicstring, str_len);
-            // changing first character of string
-            if (str_len > 0) {
-                printk(KERN_INFO "changing first character of magicstring.\n");
-                char temp_char[] = "a";
-                memcpy(temp_char, magicstring_ptr, sizeof(char));
-                temp_char[0] = temp_char[0] >> 1;
-                memcpy(magicstring_ptr, temp_char, sizeof(char));
-            }
             printk(KERN_INFO "resulting magicstring: %s\n", magicstring_ptr);
         } else {
             printk(KERN_INFO "no magicstring to put into packet.\n");

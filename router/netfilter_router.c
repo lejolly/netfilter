@@ -20,7 +20,7 @@
 #define IP_HDR_OPT_LEN 40
 static char *magicstring = "default magicstring";
 static char *request_string = "request";
-bool should_send_cap = false;
+static int cap_counter = 0;
 
 static struct nf_hook_ops out_nfho;
 static struct nf_hook_ops in_nfho;
@@ -45,8 +45,8 @@ unsigned int out_hook_func(unsigned int hooknum,
     struct iphdr *iph;
     iph = (struct iphdr *)skb_network_header(sock_buff);
 
-    if (iph && iph->ihl * 4 == sizeof(struct iphdr) && iph->protocol==IPPROTO_ICMP) {
-        printk(KERN_INFO "=== BEGIN OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===\n");
+    if (iph && iph->ihl * 4 == (sizeof(struct iphdr) + IP_HDR_OPT_LEN) && iph->protocol==IPPROTO_ICMP) {
+        printk(KERN_INFO "=== BEGIN OUTGOING ICMP PACKET WITH IP HEADER OPTIONS ===\n");
 
         // print original packet details
         // printk(KERN_INFO "Packet size: %d\n", ntohs(iph->tot_len));
@@ -78,6 +78,7 @@ unsigned int out_hook_func(unsigned int hooknum,
         printk(KERN_INFO "magicstring: %s\n", magicstring);
         unsigned int str_len = (strlen(magicstring) + 1) * sizeof(char);
         printk(KERN_INFO "input magicstring length in bytes: %d\n", str_len);
+
         if (str_len > 39) {
             str_len = 39;
             printk(KERN_INFO "string length too large, reducing to 39 bytes\n");
@@ -86,30 +87,23 @@ unsigned int out_hook_func(unsigned int hooknum,
         // printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
         // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);        
 
-        // decide whether to put magicstring into packet
-        // int rand;
-        // get_random_bytes(&rand, sizeof(rand));
-        // if (rand > 0) {
-        if (should_send_cap) {
+        if (cap_counter > 0 && cap_counter < 3) {
             printk(KERN_INFO "putting magicstring into packet.\n");
             memcpy(magicstring_ptr, magicstring, str_len);
             printk(KERN_INFO "resulting magicstring: %s\n", magicstring_ptr);
-            should_send_cap = false;
+            cap_counter++;
         }
-        // } else {
-        //     printk(KERN_INFO "NOT putting magicstring into packet.\n");
-        // }
 
         // edit length values
-        new_iphdr->tot_len  = htons(ntohs(new_iphdr->tot_len) + IP_HDR_OPT_LEN);
-        new_iphdr->ihl      = new_iphdr->ihl + (IP_HDR_OPT_LEN / 4);
+        // new_iphdr->tot_len  = htons(ntohs(new_iphdr->tot_len) + IP_HDR_OPT_LEN);
+        // new_iphdr->ihl      = new_iphdr->ihl + (IP_HDR_OPT_LEN / 4);
 
         // Calculation of IP header checksum
         new_iphdr->check    = 0;
         ip_send_check(new_iphdr);
 
         // remove old IP header then put the new one in
-        skb_pull(sock_buff, sizeof(struct iphdr));
+        skb_pull(sock_buff, sizeof(struct iphdr) + IP_HDR_OPT_LEN);
         struct iphdr *new_iph;
         new_iph = skb_push(sock_buff, new_hdr_len);
         skb_reset_network_header(sock_buff);
@@ -124,7 +118,7 @@ unsigned int out_hook_func(unsigned int hooknum,
         // printk(KERN_INFO "New IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph2->daddr));
         // print_ip_header_options(sock_buff);
 
-        printk(KERN_INFO "===  END  OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===\n");
+        printk(KERN_INFO "===  END  OUTGOING ICMP PACKET WITH IP HEADER OPTIONS ===\n");
         printk(KERN_INFO "\n");
     }
 
@@ -161,7 +155,7 @@ unsigned int in_hook_func(unsigned int hooknum,
         // compare strings
         if(strcmp(temp, request_string) == 0) {
             printk(KERN_INFO "SIFF handshaking request detected.\n");
-            should_send_cap = true;
+            cap_counter = 1;
         } else {
             if (strcmp(temp, magicstring) != 0) {
                 printk(KERN_INFO "error: strings do not match, dropping packet.\n");
@@ -212,7 +206,8 @@ static int __init initialize(void) {
     // hook onto outgoing packets
     out_nfho.hook = out_hook_func;
     // hook onto outgoing packets (All outgoing packets created by this local computer pass this hook in ip_build_and_send_pkt())
-    out_nfho.hooknum = NF_INET_LOCAL_OUT;
+    // out_nfho.hooknum = NF_INET_LOCAL_OUT;
+    out_nfho.hooknum = NF_INET_POST_ROUTING;
     out_nfho.pf = PF_INET;
     out_nfho.priority = NF_IP_PRI_FIRST;
     nf_register_hook(&out_nfho);
