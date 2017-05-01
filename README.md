@@ -20,7 +20,7 @@ $ make
 
 ### see messages from kernel module (open in another window)
 ```
-$ watch 'sudo dmesg -c >> /tmp/dmesg.log; tail -n 40 /tmp/dmesg.log'
+$ watch 'sudo dmesg -c >> /tmp/dmesg.log; tail -n 30 /tmp/dmesg.log'
 ```
 
 ### load module

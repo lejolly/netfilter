@@ -194,7 +194,7 @@ void print_ip_header_options(struct sk_buff *sock_buff) {
 }
 
 static int __init initialize(void) {
-    printk(KERN_INFO "Initializing netfilter.\n");
+    printk(KERN_INFO "Initializing netfilter (server).\n");
     // printk(KERN_INFO "magicstring: %s\n", magicstring);
 
     // hook onto outgoing packets
@@ -222,7 +222,7 @@ static int __init initialize(void) {
 }
 
 static void __exit teardown(void) {
-    printk(KERN_INFO "Tearing down netfilter.\n");
+    printk(KERN_INFO "Tearing down netfilter (server).\n");
     nf_unregister_hook(&out_nfho);
     nf_unregister_hook(&in_nfho);
     printk(KERN_INFO "\n");

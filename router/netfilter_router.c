@@ -1,4 +1,4 @@
-//Filename: netfilter_client.c
+//Filename: netfilter_router.c
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
@@ -19,8 +19,11 @@
 
 #define IP_HDR_OPT_LEN 40
 static char *magicstring = "default magicstring";
+static char *new_magicstring = "new magicstring";
 static char *request_string = "request";
 static int cap_counter = 0;
+
+static int threshold = 10;
 
 static struct nf_hook_ops out_nfho;
 static struct nf_hook_ops in_nfho;
@@ -87,11 +90,17 @@ unsigned int out_hook_func(unsigned int hooknum,
         // printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
         // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);        
 
-        if (cap_counter > 0 && cap_counter < 3) {
+        printk(KERN_INFO "cap_counter: %d\n", cap_counter);
+        if (cap_counter > 0 && cap_counter <= threshold) {
             printk(KERN_INFO "putting magicstring into packet.\n");
             memcpy(magicstring_ptr, magicstring, str_len);
             printk(KERN_INFO "resulting magicstring: %s\n", magicstring_ptr);
             cap_counter++;
+        } else if (cap_counter > threshold) {
+        	magicstring = new_magicstring;
+        	printk(KERN_INFO "threshold reached, switching keys.\n");
+        	printk(KERN_INFO "new magicstring: %s\n", magicstring);
+        	cap_counter = 0;
         }
 
         // edit length values
@@ -150,7 +159,7 @@ unsigned int in_hook_func(unsigned int hooknum,
         temp = kzalloc(IP_HDR_OPT_LEN, GFP_ATOMIC);
         memcpy(temp, magicstring_ptr, IP_HDR_OPT_LEN - 1);
 
-        printk(KERN_INFO "options found: %s\n", temp);
+        printk(KERN_INFO "incoming magicstring: %s\n", temp);
 
         // compare strings
         if(strcmp(temp, request_string) == 0) {
@@ -200,7 +209,7 @@ void print_ip_header_options(struct sk_buff *sock_buff) {
 }
 
 static int __init initialize(void) {
-    printk(KERN_INFO "Initializing netfilter.\n");
+    printk(KERN_INFO "Initializing netfilter (router).\n");
     // printk(KERN_INFO "magicstring: %s\n", magicstring);
 
     // hook onto outgoing packets
@@ -229,7 +238,7 @@ static int __init initialize(void) {
 }
 
 static void __exit teardown(void) {
-    printk(KERN_INFO "Tearing down netfilter.\n");
+    printk(KERN_INFO "Tearing down netfilter (router).\n");
     nf_unregister_hook(&out_nfho);
     nf_unregister_hook(&in_nfho);
     printk(KERN_INFO "\n");
