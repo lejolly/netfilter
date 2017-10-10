@@ -1,6 +1,8 @@
 # netfilter
 Based on: https://kel.bz/post/netfilter/
 
+Done by: Tan Qui Hao Joel, Chew Yong Chung, Lee Xiong Wei Joshua, Delon Wong Her Laang
+
 ### setup ubuntu
 ```
 $ sudo apt-get update
