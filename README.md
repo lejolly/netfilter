@@ -1,6 +1,8 @@
 # netfilter
 Based on: https://kel.bz/post/netfilter/
 
+Done for CS5321 (Network Security)
+
 ### setup ubuntu
 ```
 $ sudo apt-get update
