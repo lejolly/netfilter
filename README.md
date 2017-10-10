@@ -1,4 +1,7 @@
 # netfilter
+
+Based on the concept of SIFF: Stateless Internet Flow Fliter
+
 Based on: https://kel.bz/post/netfilter/
 
 ### setup ubuntu
