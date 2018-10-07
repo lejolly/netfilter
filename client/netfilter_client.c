@@ -177,7 +177,7 @@ void print_ip_header_options(struct sk_buff *sock_buff) {
         if (op == NULL) {
             printk(KERN_INFO "NULL IP options\n");
         } else {
-            /* Max length: 127 "OPT (" 15*4*2chars ") " */
+            // Max length: 127 "OPT (" 15*4*2chars ") "
             printk(KERN_INFO "IP options: (");
             for (i = 0; i < optsize; i++) {
                 printk(KERN_CONT "%02X", op[i]);
