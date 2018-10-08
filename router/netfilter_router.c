@@ -224,7 +224,6 @@ static int __init initialize(void) {
     // hook onto incoming packets
     in_nfho.hook = in_hook_func;
     in_nfho.hooknum = NF_INET_PRE_ROUTING;
-    // in_nfho.hooknum = NF_INET_PRE_ROUTING;
     //Interesting note: A pre-routing hook may not work here if our Vagrant
     //                  box does not know how to route to the modified source.
     //                  For the record, mine did not.
