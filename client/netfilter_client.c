@@ -46,21 +46,27 @@ unsigned int out_hook_func(unsigned int hooknum,
     if (iph && iph->ihl * 4 == sizeof(struct iphdr) && iph->protocol==IPPROTO_ICMP) {
         printk(KERN_INFO "=== BEGIN OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===\n");
 
-        // print original packet details
-        // printk(KERN_INFO "Packet size: %d\n", ntohs(iph->tot_len));
-        // printk(KERN_INFO "IP header size: %d\n", iph->ihl * 4);
-        // printk(KERN_INFO "IP header source: %d.%d.%d.%d\n", NIPQUAD(iph->saddr));
-        // printk(KERN_INFO "IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph->daddr));
-
+        #ifdef DEBUG
+            // print original packet details
+            printk(KERN_INFO "Packet size: %d\n", ntohs(iph->tot_len));
+            printk(KERN_INFO "IP header size: %d\n", iph->ihl * 4);
+            printk(KERN_INFO "IP header source: %d.%d.%d.%d\n", NIPQUAD(iph->saddr));
+            printk(KERN_INFO "IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph->daddr));
+        #endif
+        
         // expand skb headroom (from http://stackoverflow.com/a/6417918)
-        // printk(KERN_INFO "Current skb headroom: %d\n", skb_headroom(sock_buff));
+        #ifdef DEBUG
+            printk(KERN_INFO "Current skb headroom: %d\n", skb_headroom(sock_buff));
+        #endif
         if (skb_headroom(sock_buff) < IP_HDR_OPT_LEN) {
             if (0 != pskb_expand_head(sock_buff, IP_HDR_OPT_LEN - skb_headroom(sock_buff), 0, GFP_ATOMIC)) {
                 printk(KERN_ERR "Error: Unable to expand skb headroom\n");
                 kfree_skb(sock_buff);
                 return NF_STOLEN;
             } else {
-                // printk(KERN_INFO "Expanded skb headroom to: %d\n", skb_headroom(sock_buff));
+                #ifdef DEBUG
+                    printk(KERN_INFO "Expanded skb headroom to: %d\n", skb_headroom(sock_buff));
+                #endif
             }
         }
 
@@ -82,8 +88,10 @@ unsigned int out_hook_func(unsigned int hooknum,
             printk(KERN_INFO "string length too large, reducing to 39 bytes\n");
         }
         char *magicstring_ptr = (char *)new_iphdr + sizeof(struct iphdr) + 1;
-        // printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
-        // printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);        
+        #ifdef DEBUG
+            printk(KERN_INFO "new_iphdr:       0x%p\n", new_iphdr);
+            printk(KERN_INFO "magicstring_ptr: 0x%p\n", magicstring_ptr);        
+        #endif
 
         printk(KERN_INFO "putting magicstring into packet.\n");
         memcpy(magicstring_ptr, magicstring, str_len);
@@ -104,14 +112,16 @@ unsigned int out_hook_func(unsigned int hooknum,
         skb_reset_network_header(sock_buff);
         memcpy(new_iph, new_iphdr, new_hdr_len);
 
-        // print new packet details
-        // struct iphdr *iph2;
-        // iph2 = (struct iphdr *)skb_network_header(sock_buff);
-        // printk(KERN_INFO "New Packet size: %d\n", ntohs(iph2->tot_len));
-        // printk(KERN_INFO "New IP header size: %d\n", iph2->ihl * 4);
-        // printk(KERN_INFO "New IP header source: %d.%d.%d.%d\n", NIPQUAD(iph2->saddr));
-        // printk(KERN_INFO "New IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph2->daddr));
-        // print_ip_header_options(sock_buff);
+        #ifdef DEBUG
+            // print new packet details
+            struct iphdr *iph2;
+            iph2 = (struct iphdr *)skb_network_header(sock_buff);
+            printk(KERN_INFO "New Packet size: %d\n", ntohs(iph2->tot_len));
+            printk(KERN_INFO "New IP header size: %d\n", iph2->ihl * 4);
+            printk(KERN_INFO "New IP header source: %d.%d.%d.%d\n", NIPQUAD(iph2->saddr));
+            printk(KERN_INFO "New IP header dest: %d.%d.%d.%d\n", NIPQUAD(iph2->daddr));
+            print_ip_header_options(sock_buff);
+        #endif
 
         printk(KERN_INFO "===  END  OUTGOING ICMP PACKET WITH NO IP HEADER OPTIONS ===\n");
         printk(KERN_INFO "\n");
