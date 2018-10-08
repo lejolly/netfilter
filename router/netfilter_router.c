@@ -198,7 +198,7 @@ void print_ip_header_options(struct sk_buff *sock_buff) {
         if (op == NULL) {
             printk(KERN_INFO "NULL IP options\n");
         } else {
-            /* Max length: 127 "OPT (" 15*4*2chars ") " */
+            // Max length: 127 "OPT (" 15*4*2chars ") "
             printk(KERN_INFO "IP options: (");
             for (i = 0; i < optsize; i++) {
                 printk(KERN_CONT "%02X", op[i]);
@@ -224,7 +224,6 @@ static int __init initialize(void) {
     // hook onto incoming packets
     in_nfho.hook = in_hook_func;
     in_nfho.hooknum = NF_INET_PRE_ROUTING;
-    // in_nfho.hooknum = NF_INET_PRE_ROUTING;
     //Interesting note: A pre-routing hook may not work here if our Vagrant
     //                  box does not know how to route to the modified source.
     //                  For the record, mine did not.
